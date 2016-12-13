@@ -1,0 +1,7 @@
+---
+repo_url: https://test@bitbucket.org/test/test.git
+app_name: junkyu_scrap 
+webapps_dir: /home/vagrant/simple_scrap 
+repo_remote: origin
+repo_version: master
+
