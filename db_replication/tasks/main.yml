@@ -1,0 +1,31 @@
+---
+- name: Stop mysql Slave Thread
+  become: true
+  become_user: root
+  mysql_replication: mode=stopslave
+
+- name: Change Master
+  become: true
+  become_user: root
+  mysql_replication:
+     mode=changemaster 
+     master_host={{master_host}}
+     master_user={{master_user}}
+     master_password={{master_password}}
+     master_port={{master_port}}
+     master_log_file={{master_log_file}}
+     master_log_pos={{master_log_pos}}
+     master_connect_retry={{master_connect_retry}}
+
+- name: Start mysql Slave thread
+  become: true
+  become_user: root
+  mysql_replication: mode=startslave
+
+- name: Check Slave Status using port 3306
+  become: true
+  become_user: root
+  mysql_replication: mode=getslave 
+  register: checkslave
+
+- debug: msg="{{checkslave}}"
