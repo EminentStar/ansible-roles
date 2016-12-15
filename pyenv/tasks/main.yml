@@ -1,0 +1,91 @@
+---
+- name: Install Git-Dependencies
+  apt: name={{item}} state=installed update_cache=true
+  with_items:
+       - build-essential
+       - libssl-dev
+       - libcurl4-gnutls-dev
+       - libexpat1-dev
+       - gettext
+       - unzip
+  become: true
+  become_user: root
+  register: installgitdepends
+
+- name: Install Git
+  when: installgitdepends|success
+  become: true
+  become_user: root
+  apt: pkg=git state=installed update_cache=true
+  register: installgit
+
+- name: Set Git User Config 
+  when: installgit|success
+  shell: "{{item}}"
+  with_items:
+    - git config --global user.name "junk3843"
+    - git config --global user.email "junk3843@naver.com"
+  register: setgituserconfig 
+
+- name: Install pyenv-Dependencies
+  shell: sudo apt-get install -y make build-essential libssl-dev zlib1g-dev libbz2-dev \ libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev libncursesw5-dev xz-utils
+  sudo: yes
+  register: installpyenvdepends
+
+- name: Checkout pyenv
+  git: repo=https://github.com/yyuu/pyenv.git dest=/home/vagrant/.pyenv
+  register: checkoutpyenv
+
+- name: Add Environment Variables for pyenv
+  become: true
+  become_user: vagrant
+  shell: "{{item}}" 
+  with_items:
+   - echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile 
+   - echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+   - echo 'eval "$(pyenv init -)"' >> ~/.bash_profile 
+   - echo 'export LANGUAGE=en_US.UTF-8' >> ~/.bash_profile 
+   - echo 'export LC_ALL=en_US.UTF-8' >> ~/.bash_profile 
+  register: add_env_vars_for_pyenv
+
+- name: source bash_profile
+  sudo: no
+  shell: source /home/vagrant/.bash_profile
+  args: 
+     executable: /bin/bash
+ 
+- name: Install pyenv 3.5.2
+  shell: . /home/vagrant/.bashrc && /home/vagrant/.pyenv/bin/pyenv install 3.5.2
+  register: install_pyenv_3.5.2 
+  ignore_errors: yes
+
+- name: Install python-virtualenv
+  apt: pkg=python-virtualenv
+  become: true
+  become_user: root
+  register: install_python_virtualenv
+
+- name: Checkout pyenv-virtualenv 
+  git: repo=https://github.com/yyuu/pyenv-virtualenv.git dest=~/.pyenv/plugins/pyenv-virtualenv
+  register: checkoutpyenv
+
+- name: Add pyenv virtualenv-init to shell
+  shell: "{{item}}" 
+  with_items: 
+     - echo 'eval "$(pyenv virtualenv-init -)"' >> ~/.bash_profile 
+     - . ~/.bash_profile
+
+- name: source bash_profile again
+  sudo: no
+  shell: source /home/vagrant/.bash_profile
+  args: 
+     executable: /bin/bash
+
+- name: Create Virtual Environment myvenv-3.5.2
+  shell: ~/.pyenv/bin/pyenv virtualenv 3.5.2 myvenv-3.5.2
+  register: create_myvenv
+
+- name: Activate myvenv
+  when: create_myvenv|success
+  shell: . activate myvenv-3.5.2
+

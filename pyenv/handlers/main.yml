@@ -1,0 +1,4 @@
+---
+- name: Activate myvenv
+  shell: source activate myvenv-3.5.2
+
