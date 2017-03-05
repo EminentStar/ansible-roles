@@ -1,0 +1,13 @@
+---
+- name: Download the key and Add it
+  shell: wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
+
+- name: Move binary file to sources.list.d
+  shell: sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+  become: true
+  become_user: root
+
+- name: Install jenkins
+  become: true
+  become_user: root
+  apt: name=jenkins state=installed update_cache=true
